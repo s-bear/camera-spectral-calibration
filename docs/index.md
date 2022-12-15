@@ -41,9 +41,9 @@ Finally, we present an [error analysis](03-errors) based on a synthetic camera r
 :name: chain-of-calibration-intro
 :alt: Flowchart showing the chain of calibration
 
-Arrows indicate which instrument is used to calibrate the next.
-The calibration chain starts with two already-calibrated lamps (indicated by the dashed arrows): a gas discharge lamp that produced emission lines at known wavelengths and a broad-spectrum halogen lamp with a known spectral irradiance.
-These are used to calibrate an optical spectrometer, which is used to calibrate a monochromator, which is used to calibrate the camera.
+Arrows indicate which instrument is used to calibrate the next in the chain of calibration.
+We start with two externally certified lamps (indicated by the dashed arrows): a gas discharge lamp that produces emission lines at known wavelengths, and a broad-spectrum halogen lamp with a known spectral irradiance.
+These are used to calibrate an optical spectrometer, which is used to calibrate the monochromator, which is used to calibrate the camera.
 ```
 
 ```{warning}
