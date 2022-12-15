@@ -50,14 +50,15 @@ This script:
 
 import os
 from pathlib import Path
-from util import Settings
+from scripts.util import Settings
 
 #tell SCons to print which file we're working on
 Progress('$TARGET\r',overwrite=True)
 
-#set up scons environment. use tools=[] to save time (~10 sec) searching for
-#  the default build tools
-env = Environment(ENV=os.environ,tools=[])
+#set up scons environment. use tools=['python'] to save time (~10 sec) searching for
+#  the default build tools.
+env = Environment(ENV=os.environ,tools=['python'])
+
 #check if files have changed using first timestamps, then MD5 sums
 env.Decider('MD5-timestamp')
 
@@ -87,43 +88,46 @@ env['BUILDERS']['DCRaw'] = Builder(action=[dcraw,exiftool],suffix='.tiff')
 # the Settings class for loading the yaml files is used by other scripts too
 # so it's in util.py
 
-
 def parse_settings(settings_path):
     """parse the yaml file and add build tasks to SCons"""
     settings = Settings(settings_path)
     
     ### Image conversion ###
-    dcraw_crop = '-B {} {} {} {}'.format(*settings.crop_xywh)
 
-    tiffs = []
-    for wl in settings.images:
-        for i in settings.images[wl]:
-            raw_img = settings.image_file(i)
-            tiffs += env.DCRaw(raw_img, DCRAW_OPTS=f'$DCRAW_OPTS {settings.dcraw_args} {dcraw_crop}',
-                               EXIFTOOL_OPTS=f'$EXIFTOOL_OPTS -title="{wl}"')
+    #only process images if the image directory exists.
+    #this lets us distribute test datasets without e.g. 10 GB of image files.
+    if Path(settings.image_dir).is_dir():
+        dcraw_crop = '-B {} {} {} {}'.format(*settings.crop_xywh)
 
-    ### collect stats from TIFFs ###
-    samples = env.Command(target=settings.samples_file, source=str(settings_path),
-                          action=f'$PYTHON image_stats.py -i $SOURCE -o $TARGET')
-    env.Depends(samples, ['image_stats.py','util.py'])
-    env.Depends(samples, tiffs)
+        tiffs = []
+        for wl in settings.images:
+            for i in settings.images[wl]:
+                raw_img = settings.image_file(i)
+                tiffs += env.DCRaw(raw_img, DCRAW_OPTS=f'$DCRAW_OPTS {settings.dcraw_args} {dcraw_crop}',
+                                   EXIFTOOL_OPTS=f'$EXIFTOOL_OPTS -title="{wl}"')
+
+        ### collect stats from TIFFs ###
+        samples = env.Command(target=settings.samples_file, source=['scripts/image_stats.py',str(settings_path)],
+                              action='$PYTHON $SOURCE -i ${SOURCES[1]} -o $TARGET')
+        env.Depends(samples, tiffs)
 
     ### Collate monochromator spectra ###
-    spectra = env.Command(target=settings.spectra_file, source=settings.spectra_dir,
-                                 action='$PYTHON monochromator.py -i $SOURCE -o $TARGET')
-    env.Depends(spectra, ['monochromator.py', 'util.py'])
-    env.Depends(spectra, Glob(f'{settings.spectra_dir}/*'))
+    
+    #only process monochromator data if the spectra dir exists.
+    #this lets us distribute test datasets without all of the spectra files.
+    if Path(settings.spectra_dir).is_dir():
+        spectra = env.Command(target=settings.spectra_file, source=['scripts/monochromator.py',settings.spectra_dir],
+                                     action='$PYTHON $SOURCE -i ${SOURCES[1]} -o $TARGET')
+        env.Depends(spectra, Glob(f'{settings.spectra_dir}/*'))
 
     ### Compute camera response from samples ###
-    nn = '--non-negative' if settings.non_negative else ''
-    response = env.Command(target=settings.response_file, source=[settings.samples_file, settings.spectra_file],
-                action=f'$PYTHON camera_response.py {nn} -i $SOURCE -m ${{SOURCES[1]}} -o $TARGET')
-    env.Depends(response, ['camera_response.py','util.py'])
+    response = env.Command(target=settings.response_file, source=['scripts/camera_response.py',settings.samples_file, settings.spectra_file],
+                action='$PYTHON $SOURCE $OPTS -i ${SOURCES[1]} -m ${SOURCES[2]} -o $TARGET',
+                OPTS='--non-negative' if settings.non_negative else '')
 
     ### Make plots ###
-    plots = env.Command(target=settings.plots_file, source=[settings.spectra_file, settings.response_file],
-                action=f'$PYTHON plots.py -m $SOURCE -r ${{SOURCES[1]}} -o $TARGET')
-    env.Depends(plots,['plots.py'])
+    plots = env.Command(target=settings.plots_file, source=['scripts/plots.py',settings.spectra_file, settings.response_file],
+                action='$PYTHON $SOURCE -m ${SOURCES[1]} -r ${SOURCES[2]} -o $TARGET')
 
     return response,plots
 

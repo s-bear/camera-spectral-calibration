@@ -27,7 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-The util module contains several useful shared classes and methods for the
+The ``util`` module contains several useful shared classes and methods for the
 camera spectral calibration suite.
 """
 
@@ -159,7 +159,7 @@ class Settings:
         self.images : dict[float, list[int]] = self.data.get('images') #: mapping wavelength to lists of image numbers
         
         # File for image stats, in the image dir
-        self.samples_file : str = str(self._image_dir / 'samples.h5') #: path to image samples file
+        self.samples_file : str = str(self._image_dir.with_suffix('.h5')) #: path to image samples file
 
         spectra_path = path.parent / self.data.get('source_spectra')
         self.spectra_dir : str = str(spectra_path) #: illuminant spectra data directory

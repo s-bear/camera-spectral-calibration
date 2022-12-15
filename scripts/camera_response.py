@@ -103,9 +103,9 @@ def main(args=None,**kw):
     quiet : ``--quiet``, bool
         suppress status messages
     """
-    args = _parse_args(*args,**kw)
+    args = _parse_args(args,**kw)
     with QuietPrint(args.quiet):
-        """Load data, compute spectral response, save results."""
+        #Load data, compute spectral response, save results.
         print(f'Loading {args.monochromator}... ',end='')
         irrad = MonochromatorSpectra(args.monochromator)
         irrad.normalize('total')
