@@ -3,10 +3,13 @@
 
 ## Getting started:
 
-Install the execution environment using conda or mamba.
-mamba is recommended as it's much faster!
+Run these commands in your operating system's terminal.
+On Windows, use Microsoft's Windows Terminal (https://www.microsoft.com/store/productId/9N0DX20HK701).
 
-If you already have conda, run:
+First, install the execution environment using `conda` or `mamba`.
+`mamba` is recommended as it's much faster!
+
+If you already have `conda`, run:
 
 ```
 conda install mamba
@@ -14,7 +17,7 @@ conda install mamba
 
 If you're starting fresh, install from the miniforge project: https://github.com/conda-forge/miniforge#mambaforge
 
-Create the environment (from `environment.yml`):
+Create the environment (specified in `environment.yml`):
 
 ```
 mamba env create
