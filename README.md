@@ -26,7 +26,11 @@ Run these commands in your operating system's terminal.
         ```
         cd ~/path/to/camera-spectral-calibration
         ```
-
+        or on Windows
+        ```
+        cd 'path\to\camera-spectral-calibration'
+        ```
+        
     * Create the environment (specified in `environment.yml`):
         ```
         mamba env create
