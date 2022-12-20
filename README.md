@@ -20,9 +20,14 @@ If you already have `conda`, run:
 ```
 conda install -c conda-forge mamba
 ```
-Depending on how you initially installed `conda`, you may need to run `conda install` as an administrator. If that's not possible, simply run the commands below using `conda` in place of `mamba`--it will be signicantly slower, but still works.
+Depending on how you initially installed `conda`, you may need to run `conda install` as an administrator. If that's not possible, simply run the command below using `conda` in place of `mamba`--it will be signicantly slower, but still works.
 
 If you're starting fresh, install from the miniforge project: https://github.com/conda-forge/miniforge#mambaforge
+
+Open a terminal and change to the directory containing this file
+```
+cd ~/path/to/camera-spectral-calibration
+```
 
 Create the environment (specified in `environment.yml`):
 
