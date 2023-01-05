@@ -168,6 +168,7 @@ class Settings:
         stem = path.with_suffix('')
         self.response_file : str = f'{stem} response.h5' #: spectral response data file path
         self.plots_file : str = f'{stem} plots.pdf' #: spectral response plots file path
+        self.excel_file : str = f'{stem} response.xlsx' #: spectral response excel file path
     
     @staticmethod
     def check_valid(path : str) -> bool:

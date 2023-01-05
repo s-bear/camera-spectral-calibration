@@ -88,7 +88,7 @@ env['BUILDERS']['DCRaw'] = Builder(action=[dcraw,exiftool],suffix='.tiff')
 # the Settings class for loading the yaml files is used by other scripts too
 # so it's in util.py
 
-def parse_settings(settings_path):
+def parse_settings(target, settings_path):
     """parse the yaml file and add build tasks to SCons"""
     settings = Settings(settings_path)
     
@@ -129,7 +129,15 @@ def parse_settings(settings_path):
     plots = env.Command(target=settings.plots_file, source=['scripts/plots.py',settings.spectra_file, settings.response_file],
                 action='$PYTHON $SOURCE -m ${SOURCES[1]} -r ${SOURCES[2]} -o $TARGET')
 
-    return response,plots
+    ### Make excel ###
+    excel = env.Command(target=settings.excel_file, source=['scripts/response_to_excel.py',settings.response_file],
+                        action='$PYTHON $SOURCE -o $TARGET ${SOURCES[1]}')
+
+    #ensure that the plots and excel files will be built even though nothing depends on them
+    env.Alias(target, plots)
+    env.Alias(target, excel)
+
+    return response
 
 
 print('Parsing target files... ',end='',flush='')
@@ -140,14 +148,12 @@ response_files = []
 for tgt in COMMAND_LINE_TARGETS:
     settings_file = Path(tgt).with_suffix('.yml')
     if Settings.check_valid(settings_file):
-        resp_file, plots_file = parse_settings(settings_file)
-
-        env.Alias(tgt, f'{plots_file}') # so that SCons knows the plots file is the ultimate target
+        resp_file = parse_settings(tgt, settings_file)
         response_files.append(resp_file)
 
 if not response_files:
     print('No valid targets!',flush=True)
     Exit(2)
+xl = env.Command(target='responses.xlsx', source=['scripts/response_to_excel.py'] + response_files,
+                 action='$PYTHON $SOURCE -o $TARGET ${SOURCES[1:]}')
 print('DONE',flush=True)
-#xl = env.Command(target=f'responses.xlsx', source=response_files, action='$PYTHON collate_responses.py -o $TARGET $SOURCES')
-#env.Depends(xl,'collate_responses.py')
