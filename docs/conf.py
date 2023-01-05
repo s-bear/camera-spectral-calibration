@@ -34,6 +34,7 @@ default_role = 'any'
 
 autodoc_member_order = 'bysource'
 autodoc_type_aliases = {'NDArray': 'numpy.ndarray', 'ArrayLike': 'array_like'}
+autodoc_mock_imports = ['numpy','numba','scipy','matplotlib','h5py','sklearn','imageio','piexif','xlsxwriter']
 
 # -- Myst options ------------------------------------------------------------
 # https://myst-parser.readthedocs.io/en/latest/configuration.html
