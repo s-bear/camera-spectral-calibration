@@ -22,6 +22,7 @@ extensions = ['myst_parser', #for markdown parsing
               'sphinx.ext.githubpages', #make output compatible with github pages
               'sphinx.ext.mathjax', #math support
               'sphinx.ext.autodoc', #retrieve docstrings from python source
+              'sphinx.ext.linkcode', #link to github for code
               'sphinx.ext.napoleon', #support for numpy/google docstring format
               ]
 
@@ -35,6 +36,21 @@ default_role = 'any'
 autodoc_member_order = 'bysource'
 autodoc_type_aliases = {'NDArray': 'numpy.ndarray', 'ArrayLike': 'array_like'}
 autodoc_mock_imports = ['numpy','numba','scipy','matplotlib','h5py','sklearn','imageio','piexif','xlsxwriter']
+
+source_repository = 'https://github.com/s-bear/camera-spectral-calibration'
+source_directory = 'scripts'
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    if 'module' not in info:
+        return None
+    fname = info['module'].replace('.','/')
+    return f'{source_repository}/blob/main/{source_directory}/{fname}.py'
+
+# for a fancy linkcode_resolve see https://github.com/aaugustin/websockets/blob/778a1ca6936ac67e7a3fe1bbe585db2eafeaa515/docs/conf.py#L100-L134
+
+
 
 # -- Myst options ------------------------------------------------------------
 # https://myst-parser.readthedocs.io/en/latest/configuration.html
@@ -51,10 +67,9 @@ html_static_path = ['_static']
 html_title = 'Camera Spectral Calibration'
 
 html_theme_options = {
-    #'source_repository': 'https://github.com/',
-    #'source_branch': 'main',
-    #'source_directory': 'docs/',
-
+    'source_repository': source_repository,
+    'source_branch': 'main',
+    'source_directory': 'docs/',
 }
 
 mathjax3_config = {
