@@ -1,5 +1,5 @@
 name: build-docs
-run-name: ${{ github.actor }} build-docs
+run-name: build-docs (by ${{ github.actor }})
 on: 
   push:
     branches: [main]
