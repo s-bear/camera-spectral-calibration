@@ -113,20 +113,7 @@ def main(args=None,**kw):
 
         title_y = 1 - args.title_pos/args.figsize[1] #in figure coordinates
 
-        figs = {}
-        if args.monochromator:
-            print(f'Plotting {args.monochromator}... loading... ',end='')
-            irrad = MonochromatorSpectra(args.monochromator)
-            irrad.normalize('peak')
-
-            print('plotting... ',end='')
-            fig, ax = plt.subplots()
-            set_margins(fig, args.margins)
-            fig.suptitle('Monochromator output irradiance',y=title_y)
-            plot_irradiances(irrad.wl, irrad.mean, irrad.std, logy=args.logy, ax=ax)
-            set_text(ax, f'Wavelength ({irrad.wl_units})', 'Normalized spectral irradiance')
-            figs['fig-irrad'] = fig
-            print('DONE')
+        figs = []
 
         if args.response:
             print(f'Plotting {args.response}... loading... ',end='')
@@ -139,7 +126,7 @@ def main(args=None,**kw):
             fig.suptitle('Camera response',y=title_y)
             plot_response(resp.wl, resp.mean, resp.std, resp.n, logy=args.logy, ax=ax)
             set_text(ax, f'Wavelength ({resp.wl_units})', 'Normalized spectral response')
-            figs['fig-resp'] = fig
+            figs.append(('fig-resp',fig))
 
             print('plotting samples... ',end='')
             fig, ax = plt.subplots()
@@ -150,15 +137,29 @@ def main(args=None,**kw):
             est_mean, est_std = resp.estimates_mean/rgb_scale, resp.estimates_std/rgb_scale
             plot_sample_estimates(resp.samples_wl, rgb_mean, rgb_std, est_mean, est_std,ax=ax)
             set_text(ax, f'Nominal wavelength ({resp.wl_units})','Normalized pixel values')
-            figs['fig-meas'] = fig
+            figs.append(('fig-meas', fig))
+            print('DONE')
+
+        if args.monochromator:
+            print(f'Plotting {args.monochromator}... loading... ',end='')
+            irrad = MonochromatorSpectra(args.monochromator)
+            irrad.normalize('peak')
+
+            print('plotting... ',end='')
+            fig, ax = plt.subplots()
+            set_margins(fig, args.margins)
+            fig.suptitle('Monochromator output irradiance',y=title_y)
+            plot_irradiances(irrad.wl, irrad.mean, irrad.std, logy=args.logy, ax=ax)
+            set_text(ax, f'Wavelength ({irrad.wl_units})', 'Normalized spectral irradiance')
+            figs.append(('fig-irrad',fig))
             print('DONE')
 
         print('Saving figures... ',end='')
         #workaround for constrained_layout bug (fixed in mpl 3.6.2?)
         plt.rcParams['figure.constrained_layout.use'] = False
         with PdfPages(args.output) as pdf:
-            for name in figs:
-                pdf.savefig(figs[name])
+            for name, fig in figs:
+                pdf.savefig(fig)
         print('DONE')
 
 def set_margins(fig, margins):
