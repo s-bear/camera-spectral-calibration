@@ -9,11 +9,11 @@ copyright: 2022, Samuel B Powell
 ```{toctree}
 :maxdepth: 2
 :caption: Contents
-01-process
-02-maths
-03-errors
-04-nikon-results
-05-software
+calibration process
+maths
+error analysis
+example results
+software reference
 ```
 
 ## Introduction
@@ -34,8 +34,8 @@ The general idea is the same in either case and we present some results based on
 Of course, maintaining a chain of calibration means that we must calibrate the monochromator (or colour chart), which requires measuring its output with a calibrated optical spectrometer.
 The complete chain of calibration is shown in {numref}`chain-of-calibration-intro`.
 The details of the spectrometer calibration should be covered by its manual, so we treat it minimally here.
-The monochromator and camera [calibration procedures](01-process) are covered first, followed by the [mathematical details](02-maths).
-Finally, we present an [error analysis](03-errors) based on a synthetic camera response, and [results](04-nikon-results) from calibrating a Nikon D810 camera.
+The monochromator and camera [calibration procedures](calibration process) are covered first, followed by the [mathematical details](maths).
+Finally, we present an [error analysis](error analysis) based on a synthetic camera response, and [results](example results) from calibrating a Nikon D810 camera.
 
 ```{figure} chain-of-calibration.svg
 :name: chain-of-calibration-intro

@@ -1,6 +1,10 @@
 
 # Camera spectral calibration scripts
 
+These scripts are for the spectral calibration of an image sensor from photos of a known spectral source (e.g. a monochromator).
+The techniques used here could be used for calibration off of a standard colour reference chart, with modification of the scripts.
+The [project documentation](https://s-bear.github.io/camera-spectral-calibration/) describes the theory behind these scripts in addition to some test results and API reference.
+
 ## Getting started:
 
 Run these commands in your operating system's terminal.
@@ -40,10 +44,9 @@ Run these commands in your operating system's terminal.
     conda activate camera-cal
     ```
 
-5. Generate the documentation
+5. Run the scripts
     ```
-    cd docs
     scons
     ```
-6. Now read the full documention in `docs/_build/html/index.html`
+
 
