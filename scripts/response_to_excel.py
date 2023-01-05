@@ -39,7 +39,6 @@ from util import QuietPrint
 from camera_response import CameraResponse
 from pathlib import Path
 import numpy as np
-import h5py
 import xlsxwriter as xl
 
 def _parse_args(args,**kw) -> argparse.Namespace:
