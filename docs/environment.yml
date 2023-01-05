@@ -1,0 +1,8 @@
+name: camera-cal-sphinx
+channels:
+  - conda-forge
+dependencies:
+  - sphinx      # for documentation
+  - myst-parser # for documentation (Markdown support)
+  - furo        # for documentation (site theme)
+  - sphinx-copybutton # add "copy" button to code examples
