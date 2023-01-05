@@ -15,12 +15,13 @@ The H5 files are self-documenting with internal metadata, to help prevent data-w
 ## Brief description
 
   - `SConstruct` is the SCons build script, written in Python, which reads the settings files and describes the various task workflows and dependencies.
-  - [`image_stats.py`](software - image_stats) reads all of the calibration images and compiles the image statistics into a `* samples.h5` file.
-  - [`monochromator.py`](software - monochromator) reads the monochromator irradiance spectral measurements and compiles them into a single `* monochromator.h5` file.
-  - [`camera_response.py`](software - camera_response) reads the samples and monochromator files and infers the camera's spectral response, stored into a `* response.h5` file.
-  - [`plots.py`](software - plots) produces a PDF of plots of the response.
+  - [`image_stats.py`](software--image_stats) reads all of the calibration images and compiles the image statistics into a `* samples.h5` file.
+  - [`monochromator.py`](software--monochromator) reads the monochromator irradiance spectral measurements and compiles them into a single `* monochromator.h5` file.
+  - [`camera_response.py`](software--camera_response) reads the samples and monochromator files and infers the camera's spectral response, stored into a `* response.h5` file.
+  - [`plots.py`](software--plots) produces a PDF of plots of the response.
   - `collate_responses.py` collates the spectral response data from multiple cameras into a single excel spreadsheet.
-  - [`util.py`](software - util) contains various functionality common to the scripts, such as reading the settings and a helper class for dealing with the H5 files.
+  - [`response_to_excel.py`](software--response_to_excel) produces an Excel workbook summarizing the spectral response. It does not contain all of the metadata of the `* response.h5` file.
+  - [`util.py`](software--util) contains various functionality common to the scripts, such as reading the settings and a helper class for dealing with the H5 files.
   - `environment.yml` lists the software dependencies, see more below.
 
 ## Installation
@@ -92,12 +93,12 @@ For example, the `Nikon D810 UV 60mm macro.yml` file provided as an example prod
 
 ```{toctree}
 :maxdepth: 2
-software - camera_response
-software - image_stats
-software - monochromator
-software - plots
-software - response_to_excel
-software - util
+software--camera_response
+software--image_stats
+software--monochromator
+software--plots
+software--response_to_excel
+software--util
 ```
 
 ## HDF5 resources

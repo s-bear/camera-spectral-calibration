@@ -7,7 +7,7 @@ contact: samuel.powell@uq.edu.au
 
 As stated in the [introduction](index), spectral calibration requires measuring a set of known spectral irradiances.
 One of the most versatile instruments for producing consistent and controllable narrow-band light is a monochromator, which we will be using here.
-We will show a comparision of the monochromator's performance relative to a standard colour chart in [a later section](error analysis).
+We will show a comparision of the monochromator's performance relative to a standard colour chart in [a later section](error-analysis).
 Of course, the monochromator must be calibrated by measuring its output with an optical spectrometer, which must be calibrated against known light sources---a gas discharge lamp with well-defined emission lines at known wavelengths, and a deuterium-halogen lamp with a known, broad-band spectral irradiance.
 See {numref}`chain-of-calibration-process`.
 
