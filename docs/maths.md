@@ -139,7 +139,7 @@ Image noise can be divided into two components: fixed-pattern noise, due to vari
 Expanding the pixel model to a model of the whole image yields:
 ```{math}
 :label: image-model
-f_{i,x,y} = N_{i,x,y} + d_{x,y} + k_{x,y} \tau A \int_{\lambda_{min}}^{\lambda_{max}} g_{x,y}(\lambda) E_{i,x,y}(\lambda) d\lambda
+f_{ixy} = r_{ixy} + d_{xy} + k_{xy} \tau A \int_{\lambda_{min}}^{\lambda_{max}} g_{xy}(\lambda) E_{ixy}(\lambda) d\lambda
 ```
 
 $i \in \{1,\dots,M\}$
@@ -148,38 +148,41 @@ $i \in \{1,\dots,M\}$
 $x,y \in \{1,\dots,W\},\{1,\dots,H\}$
 : is the pixel location in the 2D image array.
 
-$N_{i,x,y} \in \RR^c$
-: is the temporal noise component, which in this model is zero-mean, independent, and identically distributed (IID).
+$r_{ixy} \in \RR^c ~ N(0, \Sigma), \Sigma \in \mathrm{diag}(\RR^c)$
+: is the temporal noise component, which in this model is zero-mean, independent, and identically distributed (IID) across pixels, but each colour channel may have a different noise power.
 
-The variations in $d_{x,y}$, $k_{x,y}$, and $g_{x,y}$ across the image sensor are known as "fixed-pattern noise" and are apparent when imaging a spatially uniform light source.
+The variations in $d_{xy}$, $k_{xy}$, and $g_{xy}$ across the image sensor are known as "fixed-pattern noise" and are apparent when imaging a spatially uniform light source.
 Calibrating a camera's fixed-pattern noise is known as "flat fielding" (because it involves photographing a flat light field) and is beyond the scope of this document.
 We do, however, want to estimate the *temporal* noise of the pixels, which requires factoring out any spatial variance.
-This is not flat-fielding because we don't discriminate between spatial variance in the sensor ($d_{x,y}$, $k_{x,y}$, and $g_{x,y}$) and spatial variance in the light source ($E_{x,y}$).
 
 Our dataset consists of $M$ images of the monochromator output, each at a different wavelength $\lambda_i$.
 To estimate the temporal noise of the pixels, we assume that all of the pixels have the same spectral response and factor the incident irradiance into a relative spectral distribution, which we assume is constant across the image, and a total irradiance, which varies spatially.
 This allows us to factor the spectral response integral out of the image model and replace it with a nominal pixel value $p_i=\tau A \int g(\lambda) E_i(\lambda) d\lambda$.
 ```{math}
 :label: image-model-noise
-f_{i,x,y} = N_{i,x,y} + d_{x,y} + k_{x,y} E_{x,y} p_i
+f_{ixy} = r_{ixy} + d_{xy} + k_{xy} E_{xy} p_i
 ```
 
 Now we take the spatial average over the image. As the temporal noise is zero-mean and IID, it cancels out.
 ```{math}
 :label: image-model-noise-mean
-\overline{f}_i = \frac{1}{WH}\sum_{x,y} f_{i,x,y} = \overline{d} + \overline{k E} p_i
+\overline{f}_i = \frac{1}{WH}\sum_{x,y} f_{ixy} = \overline{d} + \overline{k E} p_i
 ```
 
 As both the image model {eq}`image-model-noise` and spatial average {eq}`image-model-noise-mean` are linear with respect to $p_i$, we can use a linear regression on each pixel to find a transform that will remove any spatial variations.
 ```{math}
 :label: image-model-noise-regression
-\hat{f}_{i,x,y} = a_{x,y} + b_{x,y} \overline{f}_i \approx f_{i,x,y}; \mathrm{s.t.}\underset{a_{x,y},b_{x,y}}\mathrm{min} \| \hat{f}_{i,x,y} - f_{i,x,y} \|_2^2
+\hat{f}_{ixy} = a_{xy} + b_{xy} \overline{f}_i \approx f_{ixy}; \mathrm{s.t.}\underset{a_{xy},b_{xy}}\mathrm{min} \| \hat{f}_{ixy} - f_{ixy} \|_2^2
 ```
 
 The residuals give the temporal noise sample for each pixel:
 ```{math}
 :label: image-model-noise-residual
-N_{i,x,y} = f_{i,x,y} - \hat{f}_{i,x,y}
+N_{ixy} = f_{ixy} - \hat{f}_{ixy}
+```
+
+```{note}
+Flat fielding the image would employ a similar sequence of operations, but requires that $E_{xy}$ be constant across the image. Then $a_{xy}$ and $b_{xy}$ can be used to compensate for variations in $d_{xy}$ and $k_{xy}$. Correcting for variations in the spectral sensitivy across pixels ($g_{xy}) seems insane.
 ```
 
 ### Estimating the camera's spectral response
