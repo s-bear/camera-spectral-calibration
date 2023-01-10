@@ -172,7 +172,7 @@ Now we take the spatial average over the image. As the temporal noise is zero-me
 As both the image model {eq}`image-model-noise` and spatial average {eq}`image-model-noise-mean` are linear with respect to $p_i$, we can use a linear regression on each pixel to find a transform that will remove any spatial variations.
 ```{math}
 :label: image-model-noise-regression
-\hat{f}_{ixy} = a_{xy} + b_{xy} \overline{f}_i \approx f_{ixy}; \mathrm{s.t.}\underset{a_{xy},b_{xy}}\mathrm{min} \| \hat{f}_{ixy} - f_{ixy} \|_2^2
+\hat{f}_{ixy} = a_{xy} + b_{xy} \overline{f}_i \approx f_{ixy}; \mathrm{s.t.}\underset{a_{xy},b_{xy}}{\mathrm{min}} \| \hat{f}_{ixy} - f_{ixy} \|_2^2
 ```
 
 The residuals give the temporal noise sample for each pixel:
