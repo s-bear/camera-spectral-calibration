@@ -240,3 +240,10 @@ This regression has a closed-form solution given by
 \mat{\hat{G}} = \left(\mat{E}^\trans \mat{E} + \mat{\Gamma}^\trans \mat{\Gamma} \right)^{-1} \mat{E}^\trans \mat{\hat{F}}
 ```
 or it may be solved by minimization techniques if the system becomes too large, or constraints such as a non-negative solution are desired.
+
+### Bootstrapping for noise estimation
+Finally, we wish to estimate confidence bounds in the estimated spectral response.
+Both $\hat{\mat{F}}$ and $\mat{E}$ in {eq}`cam-ridge-solution` are sourced from real (thus noisy) measurements, and it's prudent to assess how the measurement noise will affect the final solution.
+The most straightforward way to do so is by [bootstrapping](https://en.wikipedia.org/wiki/Bootstrapping_(statistics)) the regression.
+In a nutshell, this involves resampling the measurements based on their measured noise distributions and repeating the regression for each sample.
+Noise statistics can then be computed on the results.
