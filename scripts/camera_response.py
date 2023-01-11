@@ -83,11 +83,11 @@ def main(args=None,**kw):
 
     Parameters
     ----------
-    monochromator :``-m``, ``--monochromator``, Path
+    monochromator :``-m``, ``--monochromator``, Path or MonochromatorSpectra
         monochromator spectral irradiance file.
-    input : ``-i``, ``--input``, Path
+    input : ``-i``, ``--input``, Path or CameraSamples
         input samples h5 file
-    output : ``-o``, ``--output``, Path
+    output : ``-o``, ``--output``, Path or CameraResponse
         output response h5 file
     bootstrap : ``--bootstrap``, int, default 100
         Number of bootstrapping iterations
@@ -105,17 +105,25 @@ def main(args=None,**kw):
     args = _parse_args(args,**kw)
     with QuietPrint(args.quiet):
         #Load data, compute spectral response, save results.
-        print(f'Loading {args.monochromator}... ',end='')
-        irrad = MonochromatorSpectra(args.monochromator)
-        irrad.normalize('total')
-        print('DONE')
+        if isinstance(args.monochromator, MonochromatorSpectra):
+            irrad = args.monochromator
+        else:
+            print(f'Loading {args.monochromator}... ',end='')
+            irrad = MonochromatorSpectra(args.monochromator)
+            print('DONE')
 
-        print(f'Loading {args.input}... ',end='')
-        rgb = CameraSamples(args.input)
-        rgb.normalize()
-        print('DONE')
+        if isinstance(args.input, CameraSamples):
+            rgb = args.input
+        else:
+            print(f'Loading {args.input}... ',end='')
+            rgb = CameraSamples(args.input)
+            print('DONE')
 
         print(f'Estimating spectral response ({args.method})... ',end='')
+        #normalize inputs
+        irrad.normalize('total')
+        rgb.normalize()
+
         #we need the intersection of the monochromator's nominal wavelengths and the samples'
         nom_wl, irrad_idx, rgb_idx = np.intersect1d(irrad.nom_wl, rgb.nom_wl, return_indices=True)
         #crop the data down to just those samples:
@@ -186,11 +194,13 @@ def main(args=None,**kw):
         est_rgb_mean *= rgb.scale
         est_rgb_std *= rgb.scale
         rgb.denormalize()
-
+        irrad.denormalize()
         print('DONE')
 
-        print('Saving results... ',end='')
-        resp = CameraResponse()
+        if isinstance(args.output, CameraResponse):
+            resp = args.output
+        else:
+            resp = CameraResponse()
         resp.camera = rgb.camera
         resp.lens = rgb.lens
         resp.settings = rgb.settings
@@ -214,8 +224,10 @@ def main(args=None,**kw):
         resp.estimates_std = est_rgb_std
         resp.estimates_n = args.bootstrap
 
-        resp.save(args.output)
-        print('DONE')
+        if not isinstance(args.output, CameraResponse):
+            print('Saving results... ',end='')
+            resp.save(args.output)
+            print('DONE')
 
 class CameraResponse(H5Storage):
     """Load and save camera spectral response data.
