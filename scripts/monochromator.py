@@ -353,16 +353,21 @@ class OOSpectrum:
 
 ## Spectral rebinning ##
 
-def bin_edges(centers):
-    """Compute 1D edges midway between center points."""
+def bin_edges(centers,axis=0):
+    """Compute edges midway between center points along axis."""
     centers = np.asanyarray(centers)
-    edges = np.empty(centers.shape[0]+1)
+    edges_shape = list(centers.shape)
+    edges_shape[axis] += 1
+    edges = np.empty_like(centers,shape=edges_shape)
+    #move axes (produces a view, leaving original memory layout)
+    centers = np.moveaxis(centers, axis, 0)
+    edges = np.moveaxis(edges, axis, 0)
     #edges are half-way between centers
     edges[1:-1] = (centers[:-1] + centers[1:])/2
     #first and last edge are symmetrical about centers
     edges[0] = centers[0] - 0.5*(centers[1] - centers[0])
     edges[-1] = centers[-1] + 0.5*(centers[-1] - centers[-2])
-    return edges
+    return np.moveaxis(edges,0,axis)
 
 def rebin_samples(centers, samples, new_bins=None, input_density=False, output_density=False):
     """Rebin binned samples.
