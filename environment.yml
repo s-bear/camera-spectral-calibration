@@ -17,7 +17,3 @@ dependencies:
   - scikit-learn # machine learning tools in python
   - xlsxwriter   # write excel files in python
   - matplotlib-base # create plots in python (-base variant does not include Qt gui)
-  - sphinx      # for documentation
-  - myst-parser # for documentation (Markdown support)
-  - furo        # for documentation (site theme)
-  - sphinx-copybutton # add "copy" button to code examples
