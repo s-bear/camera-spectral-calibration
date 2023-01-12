@@ -45,13 +45,16 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 from monochromator import MonochromatorSpectra
 from camera_response import CameraResponse, find_peaks
+from errors import ReconstructionStats
 
 def _parse_args(args,**kw):
     """Parse and return command-line arguments for `main`."""
     p = argparse.ArgumentParser()
     p.add_argument('-r','--response',help='input response file')
     p.add_argument('-m','--monochromator',help='input monochromator spectra file')
-    p.add_argument('-o','--output',type=Path, help='output pdf path')
+    p.add_argument('-e','--errors',help='reconstruction errors file')
+    p.add_argument('-o','--output',type=Path, help='output file path (directory for svg output)')
+    p.add_argument('--svg',action='store_true',help='save individual figures as svg files instead of as pdf pages')
     p.add_argument('--style',default='ggplot',help='matplotlib style name, or path to style file')
     p.add_argument('--logy',action='store_true',help='use logarithmic y scale for monochromator and response')
     p.add_argument('--dpi',default=300,type=int,help='set dpi')
@@ -154,12 +157,36 @@ def main(args=None,**kw):
             figs.append(('fig-irrad',fig))
             print('DONE')
 
+        if args.errors:
+            print(f'Plotting {args.errors}... loading...',end='')
+            rstats = ReconstructionStats(args.errors)
+
+            print('plotting... ',end='')
+            fig, ax = plt.subplots(1,2,sharey=True, gridspec_kw={'width_ratios':[4,1]})
+            plot_error(ax, rstats.wl, rstats.bw, rstats.rms_error)
+            set_text(ax[0],f'Wavelength ({rstats.wl_units})',f'FWHM Bandwidth ({rstats.wl_units})')
+            set_text(ax[1],'RMS Error')
+            figs.append(('fig-rms-error', fig))
+
+            fig, ax = plt.subplots(1,2,sharey=True, gridspec_kw={'width_ratios':[4,1]})
+            plot_error(ax, rstats.wl, rstats.bw, rstats.rms_noise)
+            set_text(ax[0],f'Wavelength ({rstats.wl_units})',f'FWHM Bandwidth ({rstats.wl_units})')
+            set_text(ax[1],'RMS Noise')
+            figs.append(('fig-rms-noise', fig))
+            print('DONE')
+
         print('Saving figures... ',end='')
         #workaround for constrained_layout bug (fixed in mpl 3.6.2?)
         plt.rcParams['figure.constrained_layout.use'] = False
-        with PdfPages(args.output) as pdf:
+        if args.svg:
+            p = Path(args.output)
+            p.mkdir(parents=True,exist_ok=True)
             for name, fig in figs:
-                pdf.savefig(fig)
+                fig.savefig(p / f'{name}.svg')
+        else:
+            with PdfPages(args.output) as pdf:
+                for name, fig in figs:
+                    pdf.savefig(fig)
         print('DONE')
 
 def set_margins(fig, margins):
@@ -261,6 +288,23 @@ def plot_response(wl, resp_mean, resp_std, resp_n, confidence=0.95, logy=False, 
     ax.legend([tuple(resp_lines) + tuple(resp_fills)],[f'Estimates (mean, {confidence:.0%})'],
               handler_map={tuple:plt.matplotlib.legend_handler.HandlerTuple(len(resp_lines),pad=0)})
     return ax
+
+def plot_error(axs, wl, bw, error, logz=False,vmin=None,vmax=None):
+        ox = (wl[1]-wl[0])/2
+        oy = (bw[1]-bw[0])/2
+        if logz:
+            norm = plt.cm.colors.LogNorm(vmin,vmax)
+        else:
+            norm = plt.cm.colors.Normalize(vmin,vmax)
+        im = axs[0].imshow(error,aspect='auto',origin='lower',norm=norm,
+                  extent=(wl[0]-ox, wl[-1]+ox,bw[0]-oy,bw[-1]+oy),
+                  interpolation='none')
+        plt.colorbar(im, ax=axs[0])
+        rms_error_by_bw = np.sqrt(np.mean(error**2,1))
+        axs[1].plot(rms_error_by_bw, bw)
+        axs[1].set_ylim(bw[0]-oy, bw[-1]+oy) #to match the image's extent
+        axs[1].set_xlim(left=0)
+
 
 if __name__=='__main__':
     main()
