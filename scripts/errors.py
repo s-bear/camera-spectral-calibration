@@ -35,26 +35,38 @@ This script estimates the reconstruction errors of camera_response.py
 from __future__ import annotations
 
 import argparse
-from monochromator import MonochromatorSpectra, bin_edges
-from image_stats import CameraSamples
-import camera_response
-from camera_response import CameraResponse
 
 import numpy as np
 from scipy import stats
 
-from util import QuietPrint
+from util import QuietPrint, H5Storage
+from monochromator import MonochromatorSpectra, bin_edges
+from image_stats import CameraSamples
+import camera_response
+from camera_response import CameraResponse
+import matplotlib.pyplot as plt
 
 def _parse_args(args, **kw):
     """Parse and return command-line arguments for `main`."""
-    p = argparse.ArgumentParser()
-    p.add_argument('-m','--monochromator',help='monochromator spectral irradiance file')
+    p = argparse.ArgumentParser(
+        description='Compute spectral response reconstruction errors for a given illuminant source',
+        epilog='Additional arguments (--bootstrap, --method, etc) are passed to camera_response'
+        )
+    p.add_argument('-s','--source',help='illuminant source spectral irradiance file')
+    p.add_argument('-o','--output',help='output plots path')
     p.add_argument('-b','--bandwidth_range', nargs=3, type=float, default=[5.,26.,1.], metavar='START STOP STEP',
         help='Bandwidth range to analyze, as range(START,STOP,STEP), ie. not inclusive of STOP.')
     p.add_argument('-w','--wavelength_range', nargs=2, type=float, default=[300.0,800.0],metavar='FIRST LAST',
-        help='Wavelength range to analyze, inclusive. Sampling will match the monochromator\'s.')
+        help='Wavelength range to analyze, inclusive. Sampling will match the source\'s.')
     p.add_argument('--quiet', action='store_true',help='suppress messages')
-    return p.parse_args(args, argparse.Namespace(**kw))
+    
+    # we don't want to forward -m or -i to camera_response because we'll be overriding them
+    # so we add them here and suppress them
+    p.add_argument('-m','--monochromator',help=argparse.SUPPRESS)
+    p.add_argument('-i','--input',help=argparse.SUPPRESS)
+
+    #use parse_known_args, which returns (args, unknowns) so that we can forward the unparsed args to camera_response
+    return p.parse_known_args(args, argparse.Namespace(**kw))
 
 def main(args=None, **kw):
     """Perform error analysis using synthetic camera response data.
@@ -66,19 +78,26 @@ def main(args=None, **kw):
 
     Parameters
     ----------
-    monochromator : ``-m``, ``--monochromator``, Path
-        monochromator spectral irradiance file
+    source : ``-s``, ``--source``, Path
+        illuminant source spectral irradiance file
     bandwidth_range : ``-b``, ``--bandwidth_range``, (START, STOP, STEP)
         Bandwidth range to analyze, as ``range(START,STOP,STEP)``.
     wavelength_range : ``-w``, ``--wavelength_range``, (FIRST, LAST)
-        Wavelength range to analyze, inclusive. Sampling will match the monochromator. 
+        Wavelength range to analyze, inclusive. Sampling will match the source. 
     quiet : ``--quiet``, bool
         suppress status messages
+
+    Additional arguments are passed on to camera_response.main()
     """
-    args = _parse_args(args,**kw)
+    args, camera_response_args = _parse_args(args,**kw)
+    
+    #sanitize kw so we don't get any accidental repeated arguments when calling camera_response.main below
+    for arg in ['input','output','monochromator','quiet']:
+        kw.pop(arg,None)
+
     with QuietPrint(args.quiet):
-        print(f'Loading {args.monochromator}... ',end='')
-        irrad = MonochromatorSpectra(args.monochromator)
+        print(f'Loading {args.source}... ',end='')
+        irrad = MonochromatorSpectra(args.source)
         print('DONE')
 
         print('Generating spectral responses... ',end='')
@@ -95,7 +114,7 @@ def main(args=None, **kw):
         print('Generating samples... ',end='')
         #use einsum for repeated matrix multiplies
         # irrad.mean is (N_nom, N_wl); resps is (N_bw, N_wl, N_peaks)
-        # we want to do ``irrad.mean @ resps[i] for i in range(N_bw)``
+        # we want to do ``for i in range(N_bw): all_samples[i] = irrad.mean @ resps[i]``
         all_samples = np.einsum('ij,...jk', irrad.mean, all_responses) #shape: (widths, nom_wl, peaks)
         print('DONE')
 
@@ -103,7 +122,7 @@ def main(args=None, **kw):
         samples.nom_wl = irrad.nom_wl
         samples.wl_units = irrad.wl_units
         samples.n = 1
-        samples.std = np.zeros_like(all_samples[0]) #no noise
+        samples.std = np.zeros_like(all_samples[0]) #no sample noise -- any noise in the output will be due to the illuminant
         samples.units = 'counts'
         samples.exp_time = 0
         samples.exp_time_units = 's'
@@ -115,18 +134,28 @@ def main(args=None, **kw):
 
         print('Running camera_response for each bandwidth',end='')
         est_response = CameraResponse()
-        rms_errors = []
+        rms_error = []
         rms_noise = []
         for samples_mean, true_response in zip(all_samples, all_responses):
             # run camera_response
             samples.mean = samples_mean
-            camera_response.main(input=samples,monochromator=irrad,output=est_response,quiet=True)
+            camera_response.main(camera_response_args, input=samples,monochromator=irrad,output=est_response,quiet=True, **kw)
             # get error between the true response and estimated response
-            rms_errors.append(np.sqrt(np.mean((true_response - est_response.mean)**2,axis=0)))
+            rms_error.append(np.sqrt(np.mean((true_response - est_response.mean)**2,axis=0)))
             rms_noise.append(np.sqrt(np.mean(est_response.std**2,axis=0)))
             print('.',end='')
-        rms_errors = np.array(rms_errors) #shape: (widths, peaks)
+        rms_error = np.array(rms_error) #shape: (widths, peaks)
         rms_noise = np.array(rms_noise)
+        print(' DONE')
+
+        print('Saving... ',end='')
+        rerr = ReconstructionStats()
+        rerr.source = args.source
+        rerr.wl = peaks
+        rerr.bw = widths
+        rerr.rms_error = rms_error
+        rerr.rms_noise = rms_noise
+        rerr.save(args.output)
         print(' DONE')
         
 def make_response(wl, peak, width, offset=0.05, axis=0):
@@ -136,3 +165,34 @@ def make_response(wl, peak, width, offset=0.05, axis=0):
     y = np.diff(stats.norm.cdf(x, loc=peak, scale=s),axis=axis)
     return offset + y*((1-offset)/np.max(y))
 
+class ReconstructionStats(H5Storage):
+    _h5members = [
+        (None,None,['source']),
+        ('wl','wavelength',[('wl_units','units')]),
+        ('bw','bandwidth',[('wl_units','units')]),
+        ('rms_error','rms_error',[],['bw','wl']),
+        ('rms_noise','rms_noise',[],['bw','wl']),
+    ]
+
+    def __init__(self, path=None):
+        self.source = None
+        self.wl = None
+        self.wl_units = 'nm'
+        self.bw = None
+        self.rms_error = None
+        self.rms_noise = None
+
+        if path is not None:
+            self.load(path)
+
+    def load(self, path):
+        with self._open(path,'r') as f:
+            self._load(f, warn_missing=True)
+
+    def save(self, path):
+        with self._open(path,'w') as f:
+            self._save(f)
+
+
+if __name__ == '__main__':
+    main()
