@@ -182,7 +182,7 @@ N_{ixy} = f_{ixy} - \hat{f}_{ixy}
 ```
 
 ```{note}
-Flat fielding the image would employ a similar sequence of operations, but requires that $E_{xy}$ be constant across the image. Then $a_{xy}$ and $b_{xy}$ can be used to compensate for variations in $d_{xy}$ and $k_{xy}$. Correcting for variations in the spectral sensitivy across pixels ($g_{xy}) seems insane.
+Flat fielding the image would employ a similar sequence of operations, but requires that $E_{xy}$ be constant across the image. Then $a_{xy}$ and $b_{xy}$ can be used to compensate for variations in $d_{xy}$ and $k_{xy}$. Correcting for variations in the spectral sensitivy across pixels ($g_{xy}$) seems insane.
 ```
 
 ### Estimating the camera's spectral response
