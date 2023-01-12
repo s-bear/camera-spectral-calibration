@@ -194,7 +194,7 @@ class H5Storage:
     """Base class for data storage backed by H5 files.
     
     This class provides several methods that can be used by derived classes
-    to semi-automatically load and store data from H5 files.
+    to semi-automatically load and save data from H5 files.
 
     E.g. in the derived class::
 
@@ -206,9 +206,9 @@ class H5Storage:
 
             def save(self):
                 with self._open('file.h5','w') as f:
-                    self._store(f)
+                    self._save(f)
 
-    The ``members`` argument to `_load` and `_store` is either ``None`` or an iterable where
+    The ``members`` argument to `_load` and `_save` is either ``None`` or an iterable where
     each item is ``(name, h5_name, attrs, dims, func)``. 
     If the ``members`` argument is ``None``, it defaults to ``self._h5members``.
 
@@ -238,7 +238,7 @@ class H5Storage:
     If the ``h5_scale_name`` dataset does not exist a `H5Storage.Warning` will be issued.
     """
     class Warning(UserWarning):
-        """Warning class derived from ``UserWarning``, emitted by `_load` and `_store`."""
+        """Warning class derived from ``UserWarning``, emitted by `_load` and `_save`."""
         pass
 
     def _warn(self, message : str):
@@ -324,8 +324,8 @@ class H5Storage:
                 else:
                     raise LookupError(f'H5 item attribute not found: `{item.h5_name}:{attr.h5_name}`.')
 
-    def _store(self, file : h5py.File, members : list[tuple[str,...]]|None = None):
-        """Store the specified members to file.
+    def _save(self, file : h5py.File, members : list[tuple[str,...]]|None = None):
+        """Save the specified members to file.
         
         :meta public:
 

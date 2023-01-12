@@ -304,7 +304,7 @@ class CameraResponse(H5Storage):
     def save(self,path : Path):
         """Save data to ``path``. Overwrites existing files."""
         with self._open(path,'w') as f:
-            self._store(f)
+            self._save(f)
 
 ### Signal analysis ###
 

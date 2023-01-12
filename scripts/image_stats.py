@@ -174,7 +174,7 @@ class CameraSamples(H5Storage):
         Save data to h5 file at ``path``. Existing files will be overwritten.
         """
         with self._open(path, 'w') as f:
-            self._store(f)
+            self._save(f)
 
     def normalize(self,mode : Literal['peak','total'] = 'peak'):
         """Normalize peak or total value to 1 based on ``mode``."""

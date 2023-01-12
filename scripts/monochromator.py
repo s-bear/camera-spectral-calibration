@@ -225,9 +225,9 @@ class MonochromatorSpectra(H5Storage):
         """
         #TODO: how should save deal with scale
         with self._open(path,'w') as f:
-            self._store(f)
+            self._save(f)
             if self.raw_wl is not None and self.raw_irrad is not None:
-                self._store(f, self._h5members_raw)
+                self._save(f, self._h5members_raw)
 
     def normalize(self,mode : Literal['peak','total']='peak'):
         """Normalize peak or total value to 1. mode is 'peak' or 'total'"""
